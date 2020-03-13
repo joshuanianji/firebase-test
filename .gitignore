@@ -1,14 +1,21 @@
 # Distribution
-build
+build/
 
 # elm-package generated files
-elm-stuff
+elm-stuff/
 
 # elm-repl generated files
 repl-temp-*
 
 # Dependency directories
-node_modules
+node_modules/
 
-# firebase cache
+# env
+.env
+
+
+# firebase stuff 
 .firebase/
+.firebaserc
+firestore.indexes.json
+firestore.rules
