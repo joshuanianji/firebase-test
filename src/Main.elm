@@ -1,22 +1,25 @@
 module Main exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
-import Html exposing (Html, button, div, h1, h2, h3, img, input, p, text)
-import Html.Attributes exposing (placeholder, src, value)
-import Html.Events exposing (onClick, onInput)
+import Element exposing (spacing, text)
+import Element.Font as Font
+import Element.Input as Input
+import Html exposing (Html)
+import Iso8601
 import Json.Decode
 import Json.Decode.Pipeline
 import Json.Encode
 import Ports
+import Time exposing (Posix)
 
 
 
 ---- MODEL ----
 
 
-type alias MessageContent =
-    { uid : String
-    , content : String
+type alias Message =
+    { content : String
+    , time : Posix
     }
 
 
@@ -38,7 +41,7 @@ type alias Model =
     { userData : Maybe UserData
     , error : ErrorData
     , inputContent : String
-    , messages : List String
+    , messages : List Message
     }
 
 
@@ -58,7 +61,7 @@ type Msg
     | LoggedInError (Result Json.Decode.Error ErrorData)
     | SaveMessage
     | InputChanged String
-    | MessagesReceived (Result Json.Decode.Error (List String))
+    | MessagesReceived (Result Json.Decode.Error (List Message))
 
 
 emptyError : ErrorData
@@ -147,18 +150,17 @@ logInErrorDecoder =
         |> Json.Decode.Pipeline.required "credential" (Json.Decode.nullable Json.Decode.string)
 
 
-
-{--
+messagesDecoder : Json.Decode.Decoder Message
 messagesDecoder =
-    Json.Decode.decodeString (Json.Decode.list Json.Decode.string)
+    Json.Decode.succeed Message
+        |> Json.Decode.Pipeline.required "content" Json.Decode.string
+        |> Json.Decode.Pipeline.required "time" (Json.Decode.int |> Json.Decode.map Time.millisToPosix)
 
---}
 
-
-messageListDecoder : Json.Decode.Decoder (List String)
+messageListDecoder : Json.Decode.Decoder (List Message)
 messageListDecoder =
     Json.Decode.succeed identity
-        |> Json.Decode.Pipeline.required "messages" (Json.Decode.list Json.Decode.string)
+        |> Json.Decode.Pipeline.required "messages" (Json.Decode.list messagesDecoder)
 
 
 
@@ -167,44 +169,66 @@ messageListDecoder =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ img [ src "/logo.svg" ] []
-        , h1 [] [ text "Your Elm App is working! Yay!!" ]
+    Element.column
+        []
+        [ Element.el [] <| Element.text "Your Elm App is working! Yay!!"
         , case model.userData of
             Just data ->
-                button [ onClick LogOut ] [ text "Logout from Google" ]
+                Input.button []
+                    { onPress = Just LogOut
+                    , label = text "Logout from Google"
+                    }
 
             Nothing ->
-                button [ onClick LogIn ] [ text "Login with Google" ]
-        , h2 []
-            [ text <|
-                case model.userData of
-                    Just data ->
-                        data.email ++ " " ++ data.uid ++ " " ++ data.token
+                Input.button []
+                    { onPress = Just LogIn
+                    , label = text "Login from Google"
+                    }
+        , Element.text <|
+            case model.userData of
+                Just data ->
+                    data.email ++ " " ++ data.uid ++ " " ++ data.token
 
-                    Nothing ->
-                        ""
-            ]
+                Nothing ->
+                    ""
         , case model.userData of
             Just data ->
-                div []
-                    [ input [ placeholder "Message to save", value model.inputContent, onInput InputChanged ] []
-                    , button [ onClick SaveMessage ] [ text "Save new message" ]
+                Element.column []
+                    [ Input.text []
+                        { onChange = InputChanged
+                        , text = model.inputContent
+                        , placeholder = Just <| Input.placeholder [] (Element.text "Message to save")
+                        , label = Input.labelAbove [] <| Element.text "Awesome."
+                        }
+                    , Input.button []
+                        { onPress = Just SaveMessage
+                        , label = text "Save new message"
+                        }
                     ]
 
             Nothing ->
-                div [] []
-        , div []
-            [ h3 []
-                [ text "Previous messages"
-                , div [] <|
-                    List.map
-                        (\m -> p [] [ text m ])
-                        model.messages
-                ]
+                Element.none
+        , Element.column []
+            [ Element.text "Previous messages"
+            , Element.column [] <|
+                List.map
+                    (\message ->
+                        Element.column
+                            [ spacing 4 ]
+                            [ Element.el [ Font.bold, Font.size 10 ] <| text <| posixToString message.time
+                            , Element.el [] <| text message.content
+                            ]
+                    )
+                    model.messages
             ]
-        , h2 [] [ text <| errorPrinter model.error ]
+        , Element.el [] <| text <| errorPrinter model.error
         ]
+        |> Element.layout []
+
+
+posixToString : Posix -> String
+posixToString =
+    Iso8601.fromTime
 
 
 

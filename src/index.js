@@ -84,7 +84,7 @@ firebase.auth().onAuthStateChanged(user => {
 
       docs.forEach(doc => {
         if (doc.data().content) {
-          messages.push(doc.data().content);
+          messages.push(doc.data());
         }
       });
 
@@ -98,9 +98,12 @@ firebase.auth().onAuthStateChanged(user => {
 app.ports.saveMessage.subscribe(data => {
   console.log(`saving message to database : ${data.content}`);
 
+  var now = new Date();
+
   db.collection(`users/${data.uid}/messages`)
     .add({
-      content: data.content
+      content: data.content,
+      time: now.getTime()
     })
     .catch(error => {
       app.ports.signInError.send({
