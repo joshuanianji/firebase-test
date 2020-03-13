@@ -147,9 +147,12 @@ logInErrorDecoder =
         |> Json.Decode.Pipeline.required "credential" (Json.Decode.nullable Json.Decode.string)
 
 
-messagesDecoder : Json.Decode.Decoder MessageContent
+
+{--
 messagesDecoder =
     Json.Decode.decodeString (Json.Decode.list Json.Decode.string)
+
+--}
 
 
 messageListDecoder : Json.Decode.Decoder (List String)
@@ -166,7 +169,7 @@ view : Model -> Html Msg
 view model =
     div []
         [ img [ src "/logo.svg" ] []
-        , h1 [] [ text "Your Elm App is working!" ]
+        , h1 [] [ text "Your Elm App is working! Yay!!" ]
         , case model.userData of
             Just data ->
                 button [ onClick LogOut ] [ text "Logout from Google" ]
