@@ -15,24 +15,36 @@ import Ports
 
 
 type alias MessageContent =
-    { uid : String, content : String }
+    { uid : String
+    , content : String
+    }
 
 
 type alias ErrorData =
-    { code : Maybe String, message : Maybe String, credential : Maybe String }
+    { code : Maybe String
+    , message : Maybe String
+    , credential : Maybe String
+    }
 
 
 type alias UserData =
-    { token : String, email : String, uid : String }
+    { token : String
+    , email : String
+    , uid : String
+    }
 
 
 type alias Model =
-    { userData : Maybe UserData, error : ErrorData, inputContent : String, messages : List String }
+    { userData : Maybe UserData
+    , error : ErrorData
+    , inputContent : String
+    , messages : List String
+    }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { userData = Maybe.Nothing, error = emptyError, inputContent = "", messages = [] }, Cmd.none )
+    ( { userData = Nothing, error = emptyError, inputContent = "", messages = [] }, Cmd.none )
 
 
 
@@ -51,7 +63,7 @@ type Msg
 
 emptyError : ErrorData
 emptyError =
-    { code = Maybe.Nothing, credential = Maybe.Nothing, message = Maybe.Nothing }
+    { code = Nothing, credential = Nothing, message = Nothing }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -61,7 +73,7 @@ update msg model =
             ( model, Ports.signIn () )
 
         LogOut ->
-            ( { model | userData = Maybe.Nothing, error = emptyError }, Ports.signOut () )
+            ( { model | userData = Nothing, error = emptyError }, Ports.signOut () )
 
         LoggedInData result ->
             case result of
@@ -103,7 +115,7 @@ messageEncoder model =
                 Just userData ->
                     Json.Encode.string userData.uid
 
-                Maybe.Nothing ->
+                Nothing ->
                     Json.Encode.null
           )
         ]
@@ -111,7 +123,7 @@ messageEncoder model =
 
 messageToError : String -> ErrorData
 messageToError message =
-    { code = Maybe.Nothing, credential = Maybe.Nothing, message = Just message }
+    { code = Nothing, credential = Nothing, message = Just message }
 
 
 errorPrinter : ErrorData -> String
@@ -135,6 +147,7 @@ logInErrorDecoder =
         |> Json.Decode.Pipeline.required "credential" (Json.Decode.nullable Json.Decode.string)
 
 
+messagesDecoder : Json.Decode.Decoder MessageContent
 messagesDecoder =
     Json.Decode.decodeString (Json.Decode.list Json.Decode.string)
 
@@ -158,7 +171,7 @@ view model =
             Just data ->
                 button [ onClick LogOut ] [ text "Logout from Google" ]
 
-            Maybe.Nothing ->
+            Nothing ->
                 button [ onClick LogIn ] [ text "Login with Google" ]
         , h2 []
             [ text <|
@@ -166,7 +179,7 @@ view model =
                     Just data ->
                         data.email ++ " " ++ data.uid ++ " " ++ data.token
 
-                    Maybe.Nothing ->
+                    Nothing ->
                         ""
             ]
         , case model.userData of
@@ -176,7 +189,7 @@ view model =
                     , button [ onClick SaveMessage ] [ text "Save new message" ]
                     ]
 
-            Maybe.Nothing ->
+            Nothing ->
                 div [] []
         , div []
             [ h3 []

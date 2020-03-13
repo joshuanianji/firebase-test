@@ -1,6 +1,6 @@
 # Elm Firebase
 
-Downloaded [jlengrad's elm-firebase](https://github.com/jlengrand/elm-firebase) to try some stuff out
+Downloaded [jlengrad's elm-firebase](https://github.com/jlengrand/elm-firebase) to try some stuff out. Uses Elm 0.19 and I kind of can't update because I keep getting errors lol, and 0.19 works so I'm not going to change anything.
 
 ## Overview (just for me)
 
