@@ -9,7 +9,8 @@
   "dependencies": {
     "elm-ui-testing": "github:mdgriffith/elm-ui",
     "firebase": "^6.3.3",
-    "firebase-app": "0.0.1"
+    "firebase-app": "0.0.1",
+    "lodash": "^4.17.15"
   },
   "devDependencies": {
     "create-elm-app": "^4.2.1",
