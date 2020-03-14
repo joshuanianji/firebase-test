@@ -19,3 +19,4 @@ node_modules/
 .firebaserc
 firestore.indexes.json
 firestore.rules
+firebase.json
