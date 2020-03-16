@@ -9,7 +9,6 @@ import Element exposing (Element, centerX, fill, fillPortion, height, padding, r
 import Element.Font as Font
 import Element.Input as Input
 import Html exposing (Html)
-import Iso8601
 import Json.Decode as Json
 import Modules.ChatInterface as ChatInterface
 import Modules.Navbar as Navbar
@@ -55,6 +54,7 @@ type alias Model =
     , error : Error.Error
     , inputContent : String
     , messages : List Message.Message
+    , messageState : ChatInterface.MessageState
     , navbarToggleOpened : Bool
     , time : Time.Posix
     , zone : Time.Zone
@@ -67,6 +67,7 @@ init =
       , error = Error.empty
       , inputContent = ""
       , messages = []
+      , messageState = ChatInterface.CannotSend
       , navbarToggleOpened = False
       , time = Time.millisToPosix 0
       , zone = Time.utc
@@ -130,6 +131,7 @@ chatInterface model =
         |> ChatInterface.withUserInput model.inputContent
         |> ChatInterface.withHeight 40
         |> ChatInterface.withTimeAndZone model.time model.zone
+        |> ChatInterface.withMessageState model.messageState
         |> ChatInterface.view model.messages
         |> Element.el
             [ padding 16
@@ -191,14 +193,17 @@ update msg model =
         -- first gets the time
         SaveMessage ->
             if model.inputContent == "" then
-                ( model, Cmd.none )
+                ( { model | messageState = ChatInterface.CannotSend }, Cmd.none )
 
             else
-                ( model, Task.perform SendMessage Time.now )
+                ( { model | messageState = ChatInterface.Sending }, Task.perform SendMessage Time.now )
 
         -- actually sends out the message
         SendMessage time ->
-            ( { model | inputContent = "" }
+            ( { model
+                | inputContent = ""
+                , messageState = ChatInterface.CannotSend
+              }
             , Ports.saveMessage <|
                 Message.encode
                     { content = model.inputContent
@@ -208,7 +213,20 @@ update msg model =
             )
 
         InputChanged value ->
-            ( { model | inputContent = value }, Cmd.none )
+            let
+                messageState =
+                    if value == "" then
+                        ChatInterface.CannotSend
+
+                    else
+                        ChatInterface.Idle
+            in
+            ( { model
+                | inputContent = value
+                , messageState = messageState
+              }
+            , Cmd.none
+            )
 
         MessagesReceived result ->
             case result of

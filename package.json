@@ -10,6 +10,7 @@
     "elm-ui-testing": "github:mdgriffith/elm-ui",
     "firebase": "^6.3.3",
     "firebase-app": "0.0.1",
+    "fsevents": "^2.1.2",
     "lodash": "^4.17.15"
   },
   "devDependencies": {

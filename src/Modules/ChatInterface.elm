@@ -8,8 +8,10 @@ import Element.Border as Border
 import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input
+import FontAwesome.Solid as Solid
 import Html exposing (Html)
 import InfiniteList
+import Modules.Icon as Icon
 import Time
 
 
@@ -33,7 +35,14 @@ type alias Options msg =
     , height : Int -- displayed height of the chat screen
     , time : Time.Posix
     , zone : Time.Zone
+    , messageState : MessageState
     }
+
+
+type MessageState
+    = CannotSend -- greyed out
+    | Idle -- theme color
+    | Sending -- loading sign
 
 
 
@@ -57,6 +66,7 @@ default msgs currUser =
         , height = 0
         , time = Time.millisToPosix 0
         , zone = Time.utc
+        , messageState = Idle
         }
 
 
@@ -83,16 +93,62 @@ withTimeAndZone time zone (ChatInterface options) =
         }
 
 
+withMessageState : MessageState -> ChatInterface msg -> ChatInterface msg
+withMessageState msgState (ChatInterface options) =
+    ChatInterface { options | messageState = msgState }
+
+
 
 -- VIEW
 
 
 view : List Message -> ChatInterface msg -> Element msg
 view messages (ChatInterface options) =
+    let
+        sendButtonTemplate maybeMsg elem =
+            Input.labelRight
+                ([ Font.bold
+                 , Font.size 16
+                 , centerY
+                 , width (px 24)
+                 ]
+                    ++ extraAttributes maybeMsg
+                )
+            <|
+                elem
+
+        extraAttributes maybeMsg =
+            case maybeMsg of
+                Nothing ->
+                    [ Font.color <| rgb 0.2 0.2 0.2 ]
+
+                Just msg ->
+                    [ Font.color <| rgb255 0 0 139, Events.onClick msg, pointer ]
+
+        airplane =
+            Icon.default Solid.paperPlane
+                |> Icon.view
+
+        spinner =
+            Icon.default Solid.spinner
+                |> Icon.withAnimation Icon.Spin
+                |> Icon.view
+
+        sendButton =
+            case options.messageState of
+                CannotSend ->
+                    sendButtonTemplate Nothing airplane
+
+                Idle ->
+                    sendButtonTemplate (Just options.onSend) airplane
+
+                Sending ->
+                    sendButtonTemplate Nothing spinner
+    in
     Element.column
         [ width fill
         , height fill
-        , spacing 16
+        , spacing 32
         ]
         [ InfiniteList.view (config options) options.infiniteList messages
             |> Element.html
@@ -106,20 +162,7 @@ view messages (ChatInterface options) =
             { onChange = options.onChange
             , text = Maybe.withDefault "" options.userInput
             , placeholder = Just <| Input.placeholder [ Font.color <| rgb 0.5 0.5 0.5 ] (text "Chat online!")
-
-            --- label is just the send button lol
-            , label =
-                Input.labelRight
-                    [ Font.color <| rgb255 0 0 139
-                    , Font.bold
-                    , Font.size 16
-                    , centerY
-                    , padding 8
-                    , pointer
-                    , Events.onClick options.onSend
-                    ]
-                <|
-                    text "Send"
+            , label = sendButton
             }
         ]
 

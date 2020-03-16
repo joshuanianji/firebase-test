@@ -24,12 +24,12 @@ extractReadableTime ( now, zone ) m =
     if Time.posixToMillis now - Time.posixToMillis m.time < 86400000 then
         let
             hours =
-                Time.toHour zone now
+                Time.toHour zone m.time
                     |> (\hrs -> hrs |> modBy 24)
                     |> String.fromInt
 
             minutes =
-                Time.toMinute zone now
+                Time.toMinute zone m.time
                     |> (\mins -> mins |> modBy 60)
                     |> String.fromInt
                     |> String.padLeft 2 '0'
@@ -41,17 +41,17 @@ extractReadableTime ( now, zone ) m =
         -- will add more cases later
         let
             year =
-                Time.toYear zone now
+                Time.toYear zone m.time
                     |> String.fromInt
                     |> String.right 2
 
             month =
-                Time.toMonth zone now
+                Time.toMonth zone m.time
                     |> toNumberMonth
                     |> String.fromInt
 
             day =
-                Time.toDay zone now
+                Time.toDay zone m.time
                     |> String.fromInt
         in
         String.join "/" [ month, day, year ]
