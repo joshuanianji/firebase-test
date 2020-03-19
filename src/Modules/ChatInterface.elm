@@ -1,8 +1,17 @@
-module Modules.ChatInterface exposing (..)
+module Modules.ChatInterface exposing
+    ( ChatInterface
+    , MessageState(..)
+    , default
+    , view
+    , withHeight
+    , withMessageState
+    , withTimeAndZone
+    , withUserInput
+    )
 
 import Data.Message as Message exposing (Message)
 import Data.User as User exposing (User)
-import Element exposing (..)
+import Element exposing (Element)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
@@ -109,8 +118,8 @@ view messages (ChatInterface options) =
             Input.labelRight
                 ([ Font.bold
                  , Font.size 16
-                 , centerY
-                 , width (px 24)
+                 , Element.centerY
+                 , Element.width (Element.px 24)
                  ]
                     ++ extraAttributes maybeMsg
                 )
@@ -120,10 +129,10 @@ view messages (ChatInterface options) =
         extraAttributes maybeMsg =
             case maybeMsg of
                 Nothing ->
-                    [ Font.color <| rgb 0.2 0.2 0.2 ]
+                    [ Font.color <| Element.rgb 0.2 0.2 0.2 ]
 
                 Just msg ->
-                    [ Font.color <| rgb255 0 0 139, Events.onClick msg, pointer ]
+                    [ Font.color <| Element.rgb255 0 0 139, Events.onClick msg, Element.pointer ]
 
         airplane =
             Icon.default Solid.paperPlane
@@ -146,22 +155,22 @@ view messages (ChatInterface options) =
                     sendButtonTemplate Nothing spinner
     in
     Element.column
-        [ width fill
-        , height fill
-        , spacing 32
+        [ Element.width Element.fill
+        , Element.height Element.fill
+        , Element.spacing 32
         ]
         [ InfiniteList.view (config options) options.infiniteList messages
             |> Element.html
         , Input.text
             [ Input.focusedOnLoad
-            , width fill
-            , Border.color <| rgb 0 0 0
+            , Element.width Element.fill
+            , Border.color <| Element.rgb 0 0 0
             , Border.rounded 8
             , Border.width 2
             ]
             { onChange = options.onChange
             , text = Maybe.withDefault "" options.userInput
-            , placeholder = Just <| Input.placeholder [ Font.color <| rgb 0.5 0.5 0.5 ] (text "Chat online!")
+            , placeholder = Just <| Input.placeholder [ Font.color <| Element.rgb 0.5 0.5 0.5 ] (Element.text "Chat online!")
             , label = sendButton
             }
         ]
@@ -188,34 +197,34 @@ itemView options _ _ message =
 
         align =
             if sameUser then
-                alignRight
+                Element.alignRight
 
             else
-                alignLeft
+                Element.alignLeft
 
         timeStamp =
             Element.paragraph
-                [ Background.color <| rgb 0 0 0
-                , Font.color <| rgb 1 1 1
+                [ Background.color <| Element.rgb 0 0 0
+                , Font.color <| Element.rgb 1 1 1
                 , Font.size 12
-                , centerX
+                , Element.centerX
                 ]
-                [ text <| Message.extractReadableTime ( options.time, options.zone ) message ]
+                [ Element.text <| Message.extractReadableTime ( options.time, options.zone ) message ]
     in
     Element.paragraph
-        [ spacing 15
-        , Background.color <| rgb 0.8 0.8 0.8
+        [ Element.spacing 15
+        , Background.color <| Element.rgb 0.8 0.8 0.8
         , Border.rounded 8
         , align
-        , maximum 500 shrink
-            |> width
-        , padding 8
+        , Element.maximum 500 Element.shrink
+            |> Element.width
+        , Element.padding 8
         , if sameUser then
             Element.onRight timeStamp
 
           else
             Element.onLeft timeStamp
         ]
-        [ text message.content ]
+        [ Element.text message.content ]
         -- the InfiniteList library needs our itemView to be an Html
         |> Element.layout []
